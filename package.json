@@ -1,0 +1,24 @@
+{
+  "name": "potatotwitchbot",
+  "version": "1.0.0",
+  "description": "Twitch Potato Bot",
+  "main": "src/bot.js",
+  "scripts": {
+    "test": "node-dev src/bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jremery/PotatoTwitchBot.git"
+  },
+  "author": "Justin Emery",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jremery/PotatoTwitchBot/issues"
+  },
+  "homepage": "https://github.com/jremery/PotatoTwitchBot#readme",
+  "dependencies": {
+    "node-fetch": "^2.6.0",
+    "querystring": "^0.2.0",
+    "tmi.js": "^1.5.0"
+  }
+}

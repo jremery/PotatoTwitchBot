@@ -102,3 +102,7 @@ dist
 
 # TernJS port file
 .tern-port
+
+token*
+auth.js
+app-access-token.json
