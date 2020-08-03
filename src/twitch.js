@@ -216,6 +216,7 @@ async function getChatters(streamer) {
       let staff = chat.staff;
       let viewers = chat.viewers;
       const chatters = vips.concat(moderators, staff, viewers);
+      console.log(`chatters: ${JSON.stringify(chatters)}`)
       return chatters;
     })
     .catch((err) => console.log(err));

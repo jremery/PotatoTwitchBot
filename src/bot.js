@@ -32,8 +32,13 @@ function onMessageHandler(target, context, msg, self) {
     console.log(context);
   }
   // Remove whitespace from chat message
-  const commandName = msg.trim().split(' ')[0];
-  if (target == '#trupajay') {
+  let commandName = msg.trim().split(' ')[0];
+  
+  if (commandName === 'lana'){
+    commandName = 'Lana';
+  }
+
+  if (target === '#trupajay') {
     console.log(target);
   }
 

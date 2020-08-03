@@ -113,7 +113,7 @@ addCommand('!sens', (client, context, target, msg) => {
 
 addCommand('!ban', (client, context, target, msg) => {
   if (target === '#queenp0tato') {
-    client.say(target, `I'd ban ${msg} but I'm not even a mod yet PepeHands`);
+    client.say(target, `I'd ban ${msg} but The Queen has final say.`);
   }
 });
 
@@ -150,6 +150,12 @@ addCommand('!followage', async (client, context, target, msg) => {
     client.say(target, `You aren't following ${target.substring(1)} PepeHands`);
   }
 });
+
+addCommand('!Lana', (client, context, target, msg) => {
+  //if (target == '#queenp0tato') {
+    client.say(target, 'queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep');
+  //}
+})
 
 addCommand('!taters', async (client, context, target, msg) => {
   await mongooseDB.getTaters(
