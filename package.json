@@ -4,7 +4,7 @@
   "description": "Twitch Potato Bot",
   "main": "src/bot.js",
   "scripts": {
-    "test": "node-dev src/bot.js"
+    "start:dev": "node-dev src/bot.js"
   },
   "repository": {
     "type": "git",

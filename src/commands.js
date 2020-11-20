@@ -14,7 +14,6 @@ const CLIENT_ID = auth.CLIENT_ID;
 const STREAMS_URL = 'https://api.twitch.tv/helix/streams';
 const USERS_URL = 'https://api.twitch.tv/helix/users';
 
-
 const qsQueen = querystring.stringify({
   user_login: 'queenp0tato',
 });
@@ -25,6 +24,8 @@ const qsTrupa = querystring.stringify({
 
 const qUrlQueen = `${STREAMS_URL}?${qsQueen}`;
 const qUrlTrupa = `${STREAMS_URL}?${qsTrupa}`;
+
+let duelUsers = [];
 
 addCommand('!dice', (client, context, target, msg) => {
   const num = rollDice();
@@ -153,11 +154,15 @@ addCommand('!followage', async (client, context, target, msg) => {
 
 addCommand('!Lana', (client, context, target, msg) => {
   //if (target == '#queenp0tato') {
-    client.say(target, 'queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep');
+  client.say(
+    target,
+    'queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep <3 queenp14Blep'
+  );
   //}
-})
+});
 
 addCommand('!taters', async (client, context, target, msg) => {
+  msg = msg.trim().split(' ', 2)[1];
   await mongooseDB.getTaters(
     target.substring(1),
     context.username,
@@ -168,7 +173,22 @@ addCommand('!taters', async (client, context, target, msg) => {
   );
 });
 
+addCommand('!rules', async (client, context, target, msg) => {
+  client.say(
+    target,
+    '- Be respectful and open minded... No racist/sexist/ homophobic slurs or insults - English only - No links. Ask a mod for permission or join the !discord to share media - Refrain from excessive spamming - No politics'
+  );
+});
+
+addCommand('!lurk', async (client, context, target, msg) => {
+  client.say(
+    target,
+    `${context.username} is now lurking on the farm, growing more taters.`
+  )
+});
+
 addModCommand('!so', async (client, context, target, msg) => {
+  msg = msg.trim().split(' ', 2)[1];
   let qsLookup = querystring.stringify({
     login: msg,
   });
@@ -209,7 +229,85 @@ addTestCommand('!followers', async (client, context, target, msg) => {
   });
 });
 
+addTestCommand('!duel', async (client, context, target, msg) => {
+  const userToDuel = msg.trim().split(' ', 3)[1];
+  const duelWager = msg.trim().split(' ', 3)[2];
+  if(msg.trim().split(' ', 3).length != 3){
+    client.say(target, `Wrong format ${context.username}, use !duel name number`);
+    return;
+  }
+  if (isNaN(duelWager)){
+    client.say(target, `${context.username} ${duelWager} is not a number. Use !duel name number`);
+    return;
+  }
+
+  chatters = await twitch.getChatters(target);
+  console.log(chatters.indexOf(userToDuel));
+  if (chatters.indexOf(userToDuel) < 0){
+    client.say(target, `${userToDuel} is not in the chat, ${context.username}.`);
+    return;
+  }
+
+  // check if user has enough taters
+
+  client.say(target, `${userToDuel}, you have been challenged to a potato food fight by ${context.username} for ${duelWager} taters! Enter !accept within 2 minutes to mash taters!`);
+  const duel = {challenger: context.username, user: userToDuel, wager: duelWager};
+  duelUsers.push(duel);
+  // set timeout to remove from list after 2 mins
+
+});
+
+addTestCommand('!accept', async (client, context, target, msg) => {
+  // check if user is in duel list
+
+  // check if user has enough taters
+
+  // random number to each, delay then decide winner
+  
+  // remove taters from loser, add to winner
+  
+  // respond with winner
+});
+
+addModCommand('!title', async (client, context, target, msg) => {
+  args = msg.trim().split(' ');
+  let allArgs = '';
+  for (var i = 1; i < args.length; i++) {
+    if (i + 1 < args.length) {
+      allArgs += args[i] + ' ';
+    } else {
+      allArgs += args[i];
+    }
+  }
+  const res = await twitch.updateTitle(target, allArgs);
+  if (res === 204){
+    client.say(target, `Updated title to "${allArgs}"`);
+  } else {
+    client.say(target, `Sorry there was a problem updating title.`);
+  }
+});
+
+addModCommand('!game', async (client, context, target, msg) => {
+  args = msg.trim().split(' ');
+  let allArgs = '';
+  for (var i = 1; i < args.length; i++) {
+    if (i + 1 < args.length) {
+      allArgs += args[i] + ' ';
+    } else {
+      allArgs += args[i];
+    }
+  }
+  const res = await twitch.updateGame(target, allArgs);
+  if (res === 204){
+    client.say(target, `Updated game to "${allArgs}"`);
+  } else {
+    client.say(target, `Sorry there was a problem updating the game.`);
+    console.log(res);
+  }
+}); 
+
 addCommand('!cook', async (client, context, target, msg) => {
+  msg = msg.trim().split(' ', 2)[1];
   await mongooseDB.getTaters(
     target.substring(1),
     context.username,
@@ -229,10 +327,14 @@ function cookTaters(client, target, username, msg, numTaters) {
       )} and watch to get Taters every 10 minutes.`
     );
   } else {
-    const numToCook = parseInt(msg);
+    let numToCook = parseInt(msg);
     console.log(`NumToCook: ${numToCook}`);
-    if (isNaN(numToCook)) {
+    if (isNaN(numToCook) && msg != 'all') {
       client.say(target, `${username} that is not a number.`);
+      return;
+    }
+    if (msg === 'all'){
+      numToCook = numTaters;
     }
 
     if (numToCook > numTaters) {
@@ -253,7 +355,9 @@ function cookTaters(client, target, username, msg, numTaters) {
       } else {
         client.say(
           target,
-          `Your Taters were cooked so good they multiplied! ${username} you now have ${numToCook + numTaters} Taters!`
+          `Your Taters were cooked so good they multiplied! ${username} you now have ${
+            numToCook + numTaters
+          } Taters!`
         );
         mongooseDB.addTaters(target.substring(1), username, numToCook);
       }

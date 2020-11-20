@@ -17,10 +17,13 @@ const redirect = encodeURIComponent(
 
 const FOLLOWS_URL = 'https://api.twitch.tv/helix/users/follows';
 const USERS_URL = 'https://api.twitch.tv/helix/users';
+const SEARCH_CHANNEL_URL = 'https://api.twitch.tv/helix/search/channels';
+const GAMES_URL = 'https://api.twitch.tv/helix/games';
+const CHANNELS_URL = 'https://api.twitch.tv/helix/channels';
 
 router.get('/login', (req, res) => {
   res.redirect(
-    `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirect}&response_type=code&scope=user:read:email`
+    `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirect}&response_type=code&scope=user:edit:broadcast+user:read:email`
   );
 });
 
@@ -33,8 +36,8 @@ router.get(
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
       code: code,
-      grant_type: authorization_code,
-      redirect_uri: redirect,
+      grant_type: 'authorization_code',
+      redirect_uri: 'http://localhost:8081/api/twitch/callback',
     };
     const response = await fetch(`https://id.twitch.tv/oauth2/token`, {
       method: 'POST',
@@ -45,6 +48,7 @@ router.get(
     const tokenInfo = JSON.stringify(json);
 
     saveToken(tokenInfo);
+    console.log(`tokeninfo::::: ${tokenInfo}`);
     res.redirect(`/?token=${json.access_token}`);
   })
 );
@@ -132,6 +136,52 @@ async function getUserId(streamer) {
     .catch((err) => console.error(err));
 }
 
+async function getGameName(game_id) {
+  const fetchArgs = await getFetchArgs();
+  const qsStreamer = querystring.stringify({
+    id: game_id,
+  });
+  return await fetch(`${GAMES_URL}?${qsStreamer}`, fetchArgs)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.data[0]) {
+        return data.data[0].name;
+      }
+    })
+    .catch((err) => console.error(err));
+}
+// bad way, should combine these V + ^
+async function getGameId(game_name) {
+  const fetchArgs = await getFetchArgs();
+  const qsStreamer = querystring.stringify({
+    name: game_name,
+  });
+  return await fetch(`${GAMES_URL}?${qsStreamer}`, fetchArgs)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.data[0]) {
+        return data.data[0].id;
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
+async function getChannelGameId(streamer) {
+  const fetchArgs = await getFetchArgs();
+  const qsStreamer = querystring.stringify({
+    query: streamer,
+  });
+  return await fetch(`${SEARCH_CHANNEL_URL}?${qsStreamer}`, fetchArgs)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(`data: ${JSON.stringify(data)} `);
+      if (data.data[0]) {
+        return data.data[0].game_id;
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
 async function getFollowers(streamer) {
   const fetchArgs = await getFetchArgs();
   return await getUserId(streamer).then(async (streamerId) => {
@@ -206,7 +256,9 @@ async function getFollowage(streamer, userId) {
 }
 
 async function getChatters(streamer) {
-  const streamViewerUrl = `https://tmi.twitch.tv/group/user/${streamer.substring(1)}/chatters`;
+  const streamViewerUrl = `https://tmi.twitch.tv/group/user/${streamer.substring(
+    1
+  )}/chatters`;
   return fetch(streamViewerUrl)
     .then((res) => res.json())
     .then((data) => {
@@ -216,7 +268,7 @@ async function getChatters(streamer) {
       let staff = chat.staff;
       let viewers = chat.viewers;
       const chatters = vips.concat(moderators, staff, viewers);
-      console.log(`chatters: ${JSON.stringify(chatters)}`)
+      console.log(`chatters: ${JSON.stringify(chatters)}`);
       return chatters;
     })
     .catch((err) => console.log(err));
@@ -234,10 +286,61 @@ async function getFetchArgs() {
   return fetchArgs;
 }
 
+async function updateTitle(streamer, title) {
+  const fetchArgs = await getFetchArgs();
+  const userID = await getUserId(streamer);
+  const qsStreamer = querystring.stringify({
+    broadcaster_id: userID,
+  });
+  const patchBody = {
+    title,
+  };
+  const qUrlStreamer = `${CHANNELS_URL}?${qsStreamer}`;
+  return await fetch(qUrlStreamer, {
+    method: 'PATCH',
+    body: JSON.stringify(patchBody),
+    headers: {
+      ...fetchArgs.headers,
+      ...{ 'Content-Type': 'application/json' },
+    },
+  }).then((res) => {
+    return res.status;
+  });
+}
+
+async function updateGame(streamer, game) {
+  const fetchArgs = await getFetchArgs();
+  const userID = await getUserId(streamer);
+  const game_id = await getGameId(game);
+  const qsStreamer = querystring.stringify({
+    broadcaster_id: userID,
+  });
+  const patchBody = {
+    game_id,
+  };
+  const qUrlStreamer = `${CHANNELS_URL}?${qsStreamer}`;
+  return await fetch(qUrlStreamer, {
+    method: 'PATCH',
+    body: JSON.stringify(patchBody),
+    headers: {
+      ...fetchArgs.headers,
+      ...{ 'Content-Type': 'application/json' },
+    }
+  }).then((res) => {
+    console.log(`RES: ${JSON.stringify(res)}`);
+    return res.status;
+  });
+}
+
 module.exports = {
   router,
   getToken,
   getFollowers,
   getFollowage,
   getChatters,
+  getChannelGameId,
+  getGameName,
+  updateTitle,
+  getGameId,
+  updateGame,
 };

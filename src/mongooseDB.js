@@ -73,7 +73,7 @@ async function timedTaters(streamer) {
   }
 }
 
-async function getTaters(channelDb, username, client, target, msg, callback) {
+async function getTaters(channelDb, username, client, target, msg, callback, returnNum=false) {
   mongoose.connect(`mongodb://localhost/${channelDb}`);
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'Connection error:'));
@@ -81,6 +81,9 @@ async function getTaters(channelDb, username, client, target, msg, callback) {
     console.log(`Connected to ${channelDb} database`);
     const user = await checkForUser(username);
     if (user) {
+      if (returnNum){
+        return user.numTaters;
+      }
       console.log(`returning ${user.numTaters}`);
       callback(client, target, username, msg, user.numTaters);
     } else {
